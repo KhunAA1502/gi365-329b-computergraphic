@@ -2,62 +2,62 @@ using UnityEngine;
 
 public class SimplePlayer : MonoBehaviour
 {
-    private Rigidbody2D rigid; //สำหรับการเคลื่อนที่
-    private Animator anim; //สำหรับ Animation
+    private Rigidbody2D rigid; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝับ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝอน๏ฟฝ๏ฟฝ๏ฟฝ
+    private Animator anim; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝับ Animation
 
     [Header("Ground and Wall Check")]
-    [SerializeField] private float groundDistCheck = 1f; //ระยะ sensor วิ่งไปชนพื้น
-    [SerializeField] private float wallDistCheck = 1f; //ระยะ sensor วิ่งไปชนผนัง
-    [SerializeField] private LayerMask groundLayer; //หาเฉพาะ Layer ของพื้น
-    public bool isGrounded = false; //ตรวจชนพื้น
-    public bool isWalled = false; //ตรวจชนกำแพง
+    [SerializeField] private float groundDistCheck = 1f; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ sensor ๏ฟฝ๏ฟฝ๏ฟฝไปช๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
+    [SerializeField] private float wallDistCheck = 1f; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ sensor ๏ฟฝ๏ฟฝ๏ฟฝไปช๏ฟฝ๏ฟฝ๏ฟฝัง
+    [SerializeField] private LayerMask groundLayer; //๏ฟฝ๏ฟฝเฉพ๏ฟฝ๏ฟฝ Layer ๏ฟฝอง๏ฟฝ๏ฟฝ๏ฟฝ
+    public bool isGrounded = false; //๏ฟฝ๏ฟฝวจ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
+    public bool isWalled = false; //๏ฟฝ๏ฟฝวจ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝแพง
 
     [Header("Move")]
-    [SerializeField] private float moveSpeed = 5f; //ความเร็วในการเคลื่อนที่แนวราบ
-    public float X_input; //ปุ่ม A,D
-    public float Y_input; //ปุ่ม S กดให้ slide เร็ว
+    [SerializeField] private float moveSpeed = 5f; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝในก๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝอน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาบ
+    public float X_input; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ A,D
+    public float Y_input; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ S ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ slide ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 
     [Header("Jump")]
-    [SerializeField] private float jumpForce = 20f; //แรงกระโดด
-    [SerializeField] private Vector2 wallJumpForce = new Vector2(10f, 15f); //แรงกระโดด wallJump
+    [SerializeField] private float jumpForce = 20f; //๏ฟฝรง๏ฟฝ๏ฟฝ๏ฟฝโดด
+    [SerializeField] private Vector2 wallJumpForce = new Vector2(10f, 15f); //๏ฟฝรง๏ฟฝ๏ฟฝ๏ฟฝโดด wallJump
     public bool isJumping = false;
     public bool isWallJumping = false;
     public bool isWallSliding = false;
-    public bool canDoubleJump = false; //doubleJump ได้แค่ครั้งเดียวต่อการกระโดด
-    public int facing = 1; //หันหน้าตรงข้ามผนังเวลา wallJumping
+    public bool canDoubleJump = false; //doubleJump ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝวต๏ฟฝอก๏ฟฝรก๏ฟฝ๏ฟฝโดด
+    public int facing = 1; //๏ฟฝันหน๏ฟฝาตรง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝัง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ wallJumping
 
-    [SerializeField] private float coyoteTimeLimit = .5f; //ระยะเวลาที่กดเพื่อสามารถอยู่กลางอากาศได้
-    [SerializeField] private float bufferTimeLimit = .5f; //ระยะเวลาที่กดเพื่อสามารถอยู่กลางอากาศได้
-    public float coyoteTime = -10000f; //เวลาเริ่มที่ยอมให้กดกระโดดกลางอากาศได้
-    public float bufferTime = -10000f; //เวลาเริ่มที่ยอมให้กดกระโดดก่อนถึงพื้นได้
+    [SerializeField] private float coyoteTimeLimit = .5f; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาท๏ฟฝ่กด๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝรถ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาง๏ฟฝาก๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
+    [SerializeField] private float bufferTimeLimit = .5f; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาท๏ฟฝ่กด๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝรถ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาง๏ฟฝาก๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
+    public float coyoteTime = -10000f; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ้กด๏ฟฝ๏ฟฝ๏ฟฝโดด๏ฟฝ๏ฟฝาง๏ฟฝาก๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
+    public float bufferTime = -10000f; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ้กด๏ฟฝ๏ฟฝ๏ฟฝโดด๏ฟฝ๏ฟฝอน๏ฟฝึง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 
-    private void Awake() //ทำงานก่อนเข้ามาในเกม
+    private void Awake() //๏ฟฝำงาน๏ฟฝ๏ฟฝอน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
     {
-        rigid = GetComponent<Rigidbody2D>(); //มันอยู่ที่ Game Object นี้
-        anim = GetComponentInChildren<Animator>(); //ใช้ InCoildren เพราะ Animator
+        rigid = GetComponent<Rigidbody2D>(); //๏ฟฝัน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ Game Object ๏ฟฝ๏ฟฝ๏ฟฝ
+        anim = GetComponentInChildren<Animator>(); //๏ฟฝ๏ฟฝ InCoildren ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ Animator
     }
 
-    private void Update()//ทำงานทุกเฟรม
+    private void Update()//๏ฟฝำงาน๏ฟฝุก๏ฟฝ๏ฟฝ๏ฟฝ
     {
-        JumpState(); //ตรวจสถานะว่า อยู่บนพื้น กำลังกระโดด กำลังลงพื้นหรือ wallSlide
-        Jump();// สั่งกระโดดในแบบต่างๆ
-        WallSlide(); // สั่ง wallSlide
-        InputVal(); // ตรวจ input จากผู้เล่น
-        Move(); // สั้งเคลื่อนไหวทั้งบนพื้นและอากาศ
-        Flip(); // สั่งหันหน้าไปทางทิศการเคลื่อนที่อัดโนมัต
-        GroundAndWallCheck(); // ตรวจจับพื้นและผนัง
-        Animation(); // สั่ง animation
+        JumpState(); //๏ฟฝ๏ฟฝวจสถาน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ ๏ฟฝ๏ฟฝ๏ฟฝ่บน๏ฟฝ๏ฟฝ๏ฟฝ ๏ฟฝ๏ฟฝ๏ฟฝัง๏ฟฝ๏ฟฝ๏ฟฝโดด ๏ฟฝ๏ฟฝ๏ฟฝังลง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ wallSlide
+        Jump();// ๏ฟฝ๏ฟฝ่งก๏ฟฝ๏ฟฝโดด๏ฟฝแบบ๏ฟฝ๏ฟฝาง๏ฟฝ
+        WallSlide(); // ๏ฟฝ๏ฟฝ๏ฟฝ wallSlide
+        InputVal(); // ๏ฟฝ๏ฟฝวจ input ๏ฟฝาก๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
+        Move(); // ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝอน๏ฟฝ๏ฟฝวท๏ฟฝ้งบ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาก๏ฟฝ๏ฟฝ
+        Flip(); // ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝันหน๏ฟฝ๏ฟฝไปทาง๏ฟฝ๏ฟฝศก๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝอน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝัด๏ฟฝ๏ฟฝัต
+        GroundAndWallCheck(); // ๏ฟฝ๏ฟฝวจ๏ฟฝับ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝะผ๏ฟฝัง
+        Animation(); // ๏ฟฝ๏ฟฝ๏ฟฝ animation
     }
 
-    private void JumpState() //ตรวจสถานะตัวละคร
+    private void JumpState() //๏ฟฝ๏ฟฝวจสถานะต๏ฟฝ๏ฟฝ๏ฟฝะค๏ฟฝ
     {
         if (!isGrounded && !isJumping) // fall/takeoff
         {
-            isJumping = true; //โดดอยู่
+            isJumping = true; //โดด๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 
-            if (rigid.linearVelocityY <= 0f) //fall หล่นอยู่
+            if (rigid.linearVelocityY <= 0f) //fall ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
             {
-                coyoteTime = Time.time; //เริ่มนับเวลา coyote
+                coyoteTime = Time.time; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝับ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ coyote
             }
         }
 
@@ -69,22 +69,22 @@ public class SimplePlayer : MonoBehaviour
             canDoubleJump = false;
         }
 
-        if (isWalled) // ตรวจ wallSliding
+        if (isWalled) // ๏ฟฝ๏ฟฝวจ wallSliding
         {
             isJumping = false;
             isWallJumping = false;
             canDoubleJump = false;
 
-            if (isGrounded) //ถ้าอยู่บนพื้น
+            if (isGrounded) //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ่บน๏ฟฝ๏ฟฝ๏ฟฝ
             {
                 isWallSliding = false;
             }
-            else //ถ้าไม่อยู่บนพื้น
+            else //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ่บน๏ฟฝ๏ฟฝ๏ฟฝ
             {
                 isWallSliding = true;
             }
         }
-        else //ยกเลิก wallSlide ถ้าไม่ติดกำแพง
+        else //ยก๏ฟฝ๏ฟฝิก wallSlide ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝิด๏ฟฝ๏ฟฝแพง
         {
             isWallSliding = false;
         }
@@ -92,20 +92,20 @@ public class SimplePlayer : MonoBehaviour
 
     private void Jump()
     {
-        if (Input.GetKeyDown(KeyCode.Space)) //ถ้ากด Space Bar
+        if (Input.GetKeyDown(KeyCode.Space)) //๏ฟฝ๏ฟฝาก๏ฟฝ Space Bar
         {
-            if (!isWalled) // ถ้าไม่ติดกำแพง
+            if (!isWalled) // ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝิด๏ฟฝ๏ฟฝแพง
             {
-                if (isGrounded) // *** normalJump // ถ้าอยู่บนพื้น
+                if (isGrounded) // *** normalJump // ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ่บน๏ฟฝ๏ฟฝ๏ฟฝ
                 {
                     canDoubleJump = true;
                     rigid.linearVelocity = new Vector2(rigid.linearVelocityX, jumpForce);
                 }
-                else // doubleJump, coyoteJump // ถ้าไม่อยู่บนพื้น
+                else // doubleJump, coyoteJump // ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ่บน๏ฟฝ๏ฟฝ๏ฟฝ
                 {
                     if (rigid.linearVelocityY > 0f && canDoubleJump) // *** doubleJump
                     {
-                        canDoubleJump = false; // doubleJump ซ้ำไม่ได้
+                        canDoubleJump = false; // doubleJump ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
                         rigid.linearVelocity = new Vector2(rigid.linearVelocityX, jumpForce);
                     }
 
@@ -116,23 +116,23 @@ public class SimplePlayer : MonoBehaviour
                             coyoteTime = 0f;
                             rigid.linearVelocity = new Vector2(rigid.linearVelocityX, jumpForce); //โดด
                         }
-                        else // เริ่มนับ bufferJump
+                        else // ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝับ bufferJump
                         {
-                            bufferTime = Time.time; //เริ่มจับ bufferTime
+                            bufferTime = Time.time; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝับ bufferTime
                         }
                     }
                 }
             }
-            else //ถ้าติดกำแพงแสดงว่าเป็น wallJump
+            else //๏ฟฝ๏ฟฝาติด๏ฟฝ๏ฟฝแพง๏ฟฝสด๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ wallJump
             {
                 canDoubleJump = false; 
-                isWallJumping = true; //จะได้ออกจาก wallSliding
+                isWallJumping = true; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝอก๏ฟฝาก wallSliding
                 rigid.linearVelocity = new Vector2(wallJumpForce.x * facing, wallJumpForce.y); //***wallJump
             }
         }
-        else //ถ้าไม่กดจะเป็น bufferJump
+        else //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ่กด๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ bufferJump
         {
-            if (isGrounded && Time.time < bufferTime + bufferTimeLimit) //ถ้าอยู่ที่พื้นและอยู่ในเวลาที่ buffer ได้
+            if (isGrounded && Time.time < bufferTime + bufferTimeLimit) //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาท๏ฟฝ๏ฟฝ buffer ๏ฟฝ๏ฟฝ
             {
                 bufferTime = 0f;
                 rigid.linearVelocity = new Vector2(rigid.linearVelocityX, jumpForce); //***bufferJump
@@ -143,65 +143,78 @@ public class SimplePlayer : MonoBehaviour
     private void WallSlide()
     {
         if (!isWalled || isGrounded || isWallJumping || rigid.linearVelocityY > 0f)
-            return; //ข้ามบรรทัดที่เหลือ
+            return; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝรทัด๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 
         float Y_slide = Y_input < 0f ? 1f : .5f;
-        rigid.linearVelocity = new Vector2(X_input * moveSpeed, rigid.linearVelocityY * Y_slide); //ตกช้าลง
+        rigid.linearVelocity = new Vector2(X_input * moveSpeed, rigid.linearVelocityY * Y_slide); //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝลง
     }
 
     private void InputVal()
     {
-        X_input = Input.GetAxisRaw("Horizontal"); //GetAxisRaw() ข้อมูลแบบหยาบ
+        X_input = Input.GetAxisRaw("Horizontal"); //GetAxisRaw() ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝแบบ๏ฟฝ๏ฟฝาบ
         Y_input = Input.GetAxisRaw("Vertical");
     }
 
     private void Move()
     {
-        if (isWallJumping || isWallSliding) //ถ้า wallJumping อยู่ให้ออกจากการควบคุมจาก Player
-            return; //มันจะไม่อ่านบรรทัดที่เหลือ
+        if (isWallJumping || isWallSliding) //๏ฟฝ๏ฟฝ๏ฟฝ wallJumping ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝอก๏ฟฝาก๏ฟฝ๏ฟฝรควบ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาก Player
+            return; //๏ฟฝัน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝาน๏ฟฝ๏ฟฝรทัด๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
 
-        if (isGrounded) //ถ้าอยู่บนพื้น
+        if (isGrounded) //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ่บน๏ฟฝ๏ฟฝ๏ฟฝ
         {
-            rigid.linearVelocity = new Vector2(X_input * moveSpeed, rigid.linearVelocityY); //ออกแรงผลัก rigid ให้เคลื่อนที่
+            rigid.linearVelocity = new Vector2(X_input * moveSpeed, rigid.linearVelocityY); //๏ฟฝอก๏ฟฝรง๏ฟฝ๏ฟฝัก rigid ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝอน๏ฟฝ๏ฟฝ๏ฟฝ
         }
-        else //ถ้าลอยกลางอากาศ
+        else //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝยก๏ฟฝาง๏ฟฝาก๏ฟฝ๏ฟฝ
         {
-            float X_airMove = X_input != 0f ? X_input * moveSpeed : rigid.linearVelocityX; //แกน X ถ้าไม่กดจะเคลื่อนที่ตามแรง Physics
+            float X_airMove = X_input != 0f ? X_input * moveSpeed : rigid.linearVelocityX; //แกน X ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ่กด๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝอน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝรง Physics
             rigid.linearVelocity = new Vector2(X_airMove, rigid.linearVelocityY);
         }
     }
 
-    private void Flip() //หมุนตัวละคร ตามทิศการเคลื่อนที่
+    private void Flip() //๏ฟฝ๏ฟฝุน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝะค๏ฟฝ ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝศก๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝอน๏ฟฝ๏ฟฝ๏ฟฝ
     {
-        if (rigid.linearVelocityX > 0.1f) //ผลักไปทางขวามือ
+        if (rigid.linearVelocityX > 0.1f) //๏ฟฝ๏ฟฝักไปทาง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
         {
-            facing = -1; //หันหน้าตรงข้าม
-            transform.rotation = Quaternion.identity; //identity มีค่าเท่ากับ 0,0,0 /หันตอนเริ่ม
+            facing = -1; //๏ฟฝันหน๏ฟฝาตรง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
+            transform.rotation = Quaternion.identity; //identity ๏ฟฝีค๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝากับ 0,0,0 /๏ฟฝัน๏ฟฝอน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
         }
-        else if (rigid.linearVelocityX < -0.01f) //ถ้าไม่ผลักทางขวา
+        else if (rigid.linearVelocityX < -0.01f) //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝัก๏ฟฝาง๏ฟฝ๏ฟฝ๏ฟฝ
         {
-            facing = 1; //หันหน้าตรงข้าม
-            transform.rotation = Quaternion.Euler(0f, 180f, 0f); //หันไป 180 องศา
+            facing = 1; //๏ฟฝันหน๏ฟฝาตรง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ
+            transform.rotation = Quaternion.Euler(0f, 180f, 0f); //๏ฟฝัน๏ฟฝ 180 อง๏ฟฝ๏ฟฝ
         }
     }
 
     private void GroundAndWallCheck()
     {
-        isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundDistCheck, groundLayer); //sensor พื้น
-        isWalled = Physics2D.Raycast(transform.position, transform.right, wallDistCheck, groundLayer); //sensor ผนัง
+        isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundDistCheck, groundLayer); //sensor ๏ฟฝ๏ฟฝ๏ฟฝ
+        isWalled = Physics2D.Raycast(transform.position, transform.right, wallDistCheck, groundLayer); //sensor ๏ฟฝ๏ฟฝัง
     }
 
-    private void OnDrawGizmos() //กราฟฟิกแสดงผลของ sensor ตรวจจับพื้นและผนัง
+    private void OnDrawGizmos() //๏ฟฝ๏ฟฝาฟ๏ฟฝิก๏ฟฝสด๏ฟฝ๏ฟฝลของ sensor ๏ฟฝ๏ฟฝวจ๏ฟฝับ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝะผ๏ฟฝัง
     {
-        Gizmos.color = Color.blue; //เส้นสีน้ำเงิน
-        Gizmos.DrawLine(transform.position, transform.position + Vector3.down * groundDistCheck); //เส้น sensor ตรวจพื้น
-        Gizmos.color = Color.red; //เส้นสีแดง
-        Gizmos.DrawLine(transform.position, transform.position + transform.right * wallDistCheck); //เส้น sensor ตรวจผนัง
+        Gizmos.color = Color.blue; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝีน๏ฟฝ๏ฟฝ๏ฟฝิน
+        Gizmos.DrawLine(transform.position, transform.position + Vector3.down * groundDistCheck); //๏ฟฝ๏ฟฝ๏ฟฝ sensor ๏ฟฝ๏ฟฝวจ๏ฟฝ๏ฟฝ๏ฟฝ
+        Gizmos.color = Color.red; //๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝแดง
+        Gizmos.DrawLine(transform.position, transform.position + transform.right * wallDistCheck); //๏ฟฝ๏ฟฝ๏ฟฝ sensor ๏ฟฝ๏ฟฝวจ๏ฟฝ๏ฟฝัง
     }
 
     private void Animation()
     {
+        anim.SetBool("isGrounded", isGrounded); // เธ•เธฑเธ”เธชเธดเธเนเธเธงเนเธฒ เธฅเธญเธข/เธญเธขเธนเนเธเธเธเธทเนเธ
+        anim.SetBool("isWallSliding", isWallSliding); // เธ•เธฑเธ”เธชเธดเธเนเธ wallSliding
 
+        if(isWalled) // เธ–เนเธฒเธ•เธดเธ”เธเธณเนเธเธเธเธฐเธซเธขเธธเธ”เน€เธ”เธดเธ
+        {
+            anim.SetFloat("velX", 0f); // เธซเธขเธธเธ” run
+        }
+        else
+        {
+            anim.SetFloat("velX", rigid.linearVelocityX); // เธเธฐ idle เธซเธฃเธทเธญ run
+        }
+
+        anim.SetFloat("velX", rigid.linearVelocityX); // เธเธฐ idle เธซเธฃเธทเธญ run
+        anim.SetFloat("velY", rigid.linearVelocityY); // เธเธฐเนเธ”เธ”เธเธถเนเธเธซเธฃเธทเธญเธฅเธ
     }
 
 }
